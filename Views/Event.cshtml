@@ -155,16 +155,36 @@
                                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                             <circle cx="12" cy="7" r="4"></circle>
                                         </svg>
-                                        <h3>Member-Only Booking</h3>
-                                        <p>You must be logged in as a member to book this event.</p>
-                                        <div class="button-group">
-                                            <a href="/umbraco/surface/members/login?returnUrl=@Uri.EscapeDataString(Context.Request.Path)" class="btn btn-primary">
-                                                Login to Book
-                                            </a>
-                                            <a href="/umbraco/surface/members/register" class="btn btn-secondary">
-                                                Register as Member
-                                            </a>
-                                        </div>
+                                        <h3>Member Login Required</h3>
+                                        <p>Please login to book this event</p>
+                                        
+                                        @if (TempData["LoginError"] != null)
+                                        {
+                                            <div class="alert alert-error" style="margin: 15px 0;">
+                                                <p>@TempData["LoginError"]</p>
+                                            </div>
+                                        }
+                                        
+                                        @using (Html.BeginUmbracoForm("HandleLogin", "MemberAuth", FormMethod.Post))
+                                        {
+                                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                            
+                                            <div class="form-group">
+                                                <label for="username">Email / Username</label>
+                                                <input type="text" id="username" name="username" class="form-control" required placeholder="emmanuelugwu1004@gmail.com">
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="password">Password</label>
+                                                <input type="password" id="password" name="password" class="form-control" required>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary">Login to Book</button>
+                                        }
+                                        
+                                        <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                                            Use the member credentials created in the Umbraco back office
+                                        </p>
                                     </div>
                                 }
                             </div>

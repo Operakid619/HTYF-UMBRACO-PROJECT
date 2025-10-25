@@ -52,7 +52,8 @@ public class MemberAuthController : SurfaceController
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             TempData["LoginError"] = "Please enter both username and password.";
-            return RedirectToCurrentUmbracoPage();
+            ViewData["ReturnUrl"] = returnUrl;
+            return View("~/Views/Partials/MemberLogin.cshtml");
         }
 
         var result = await _memberManager.ValidateCredentialsAsync(username, password);
@@ -70,12 +71,13 @@ public class MemberAuthController : SurfaceController
                     return Redirect(returnUrl);
                 }
                 
-                return RedirectToCurrentUmbracoPage();
+                return Redirect("/");
             }
         }
 
         TempData["LoginError"] = "Invalid username or password.";
-        return RedirectToCurrentUmbracoPage();
+        ViewData["ReturnUrl"] = returnUrl;
+        return View("~/Views/Partials/MemberLogin.cshtml");
     }
 
     [HttpPost]
@@ -83,6 +85,6 @@ public class MemberAuthController : SurfaceController
     {
         await _signInManager.SignOutAsync();
         TempData["LogoutSuccess"] = "You have been logged out.";
-        return RedirectToCurrentUmbracoPage();
+        return Redirect("/");
     }
 }

@@ -2,10 +2,10 @@
 @inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @{
     Layout = null;
-    var events = Model?.Children<Event>()
-        .Where(e => e.EventDateTime >= DateTime.Now)
-        .OrderBy(e => e.EventDateTime)
-        .ToList() ?? new List<Event>();
+    var events = Model?.Children
+        .Where(e => e.Value<DateTime>("eventDateTime") >= DateTime.Now)
+        .OrderBy(e => e.Value<DateTime>("eventDateTime"))
+        .ToList() ?? new List<IPublishedContent>();
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -40,8 +40,8 @@
                 <div class="events-grid">
                     @foreach (var eventItem in events)
                     {
-                        var eventDate = eventItem.EventDateTime;
-                        var remainingSpots = eventItem.Capacity;
+                        var eventDate = eventItem.Value<DateTime>("eventDateTime");
+                        var remainingSpots = eventItem.Value<int>("capacity");
                         
                         <article class="event-card">
                             <div class="event-card-header">
@@ -78,7 +78,7 @@
                                             <polyline points="2 17 12 22 22 17"></polyline>
                                             <polyline points="2 12 12 17 22 12"></polyline>
                                         </svg>
-                                        <span>@eventItem.Location</span>
+                                        <span>@eventItem.Value<string>("location")</span>
                                     </div>
                                     <div class="meta-item">
                                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -87,14 +87,17 @@
                                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                         </svg>
-                                        <span>@remainingSpots / @eventItem.Capacity available</span>
+                                        <span>@remainingSpots / @remainingSpots available</span>
                                     </div>
                                 </div>
 
-                                @if (!string.IsNullOrWhiteSpace(eventItem.Summary?.ToString()))
+                                @{
+                                    var summary = eventItem.Value<string>("summary");
+                                }
+                                @if (!string.IsNullOrWhiteSpace(summary))
                                 {
                                     <div class="event-summary">
-                                        @Html.Raw(eventItem.Summary?.ToString()?.Substring(0, Math.Min(150, eventItem.Summary?.ToString()?.Length ?? 0)))...
+                                        @Html.Raw(summary.Substring(0, Math.Min(150, summary.Length)))...
                                     </div>
                                 }
 

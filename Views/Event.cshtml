@@ -1,12 +1,12 @@
 ﻿@using Umbraco.Cms.Web.Common.PublishedModels;
 @using SeniorEventBooking.Models;
-@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.Event>
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
 @{
     Layout = null;
-    var eventDate = Model.EventDateTime;
+    var eventDate = Model.Value<DateTime>("eventDateTime");
     var isPastEvent = eventDate < DateTime.Now;
-    var isSoldOut = Model.Capacity <= 0;
+    var isSoldOut = Model.Value<int>("capacity") <= 0;
     var showBookingSuccess = TempData["BookingSuccess"] != null;
     var showBookingError = TempData["BookingError"] != null;
     var isLoggedIn = User?.Identity?.IsAuthenticated ?? false;
@@ -92,7 +92,7 @@
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <span>@Model.Location</span>
+                                <span>@Model.Value<string>("location")</span>
                             </div>
                             <div class="meta-item">
                                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -101,7 +101,7 @@
                                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
-                                <span><strong>@Model.Capacity</strong> spots available</span>
+                                <span><strong>@Model.Value<int>("capacity")</strong> spots available</span>
                             </div>
                         </div>
 
@@ -113,9 +113,9 @@
                         {
                             <span class="badge badge-danger">Sold Out</span>
                         }
-                        else if (Model.Capacity <= 10)
+                        else if (Model.Value<int>("capacity") <= 10)
                         {
-                            <span class="badge badge-warning">Only @Model.Capacity spots left!</span>
+                            <span class="badge badge-warning">Only @Model.Value<int>("capacity") spots left!</span>
                         }
                         else
                         {
@@ -127,10 +127,10 @@
                 <div class="event-detail-body">
                     <section class="event-description">
                         <h2>About This Event</h2>
-                        @if (!string.IsNullOrWhiteSpace(Model.Summary?.ToString()))
+                        @if (!string.IsNullOrWhiteSpace(Model.Value<string>("summary")))
                         {
                             <div class="rich-text">
-                                @Html.Raw(Model.Summary)
+                                @Html.Raw(Model.Value<string>("summary"))
                             </div>
                         }
                         else

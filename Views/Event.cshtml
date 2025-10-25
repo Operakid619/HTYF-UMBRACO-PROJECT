@@ -158,7 +158,7 @@
                                         <h3>Member-Only Booking</h3>
                                         <p>You must be logged in as a member to book this event.</p>
                                         <div class="button-group">
-                                            <a href="/umbraco/surface/members/login?returnUrl=@Url.Encode(Context.Request.Path)" class="btn btn-primary">
+                                            <a href="/umbraco/surface/members/login?returnUrl=@Uri.EscapeDataString(Context.Request.Path)" class="btn btn-primary">
                                                 Login to Book
                                             </a>
                                             <a href="/umbraco/surface/members/register" class="btn btn-secondary">

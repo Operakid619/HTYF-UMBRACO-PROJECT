@@ -1,6 +1,8 @@
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Migrations;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Infrastructure.Migrations;
@@ -15,11 +17,11 @@ public class EventBookingMigrationComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
-        builder.AddNotificationHandler<Umbraco.Cms.Core.Notifications.UmbracoApplicationStartingNotification, RunEventBookingMigration>();
+        builder.AddNotificationHandler<UmbracoApplicationStartingNotification, RunEventBookingMigration>();
     }
 }
 
-public class RunEventBookingMigration : INotificationHandler<Umbraco.Cms.Core.Notifications.UmbracoApplicationStartingNotification>
+public class RunEventBookingMigration : INotificationHandler<UmbracoApplicationStartingNotification>
 {
     private readonly IMigrationPlanExecutor _migrationPlanExecutor;
     private readonly ICoreScopeProvider _scopeProvider;
@@ -35,7 +37,7 @@ public class RunEventBookingMigration : INotificationHandler<Umbraco.Cms.Core.No
         _keyValueService = keyValueService;
     }
 
-    public void Handle(Umbraco.Cms.Core.Notifications.UmbracoApplicationStartingNotification notification)
+    public void Handle(UmbracoApplicationStartingNotification notification)
     {
         var migrationPlan = new MigrationPlan("EventBooking");
         migrationPlan.From(string.Empty)

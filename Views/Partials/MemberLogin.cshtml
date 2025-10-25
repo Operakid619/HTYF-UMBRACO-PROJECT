@@ -1,0 +1,75 @@
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    var returnUrl = ViewData["ReturnUrl"] as string;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Login</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="main-nav">
+                <h1 class="site-title">Member Login</h1>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="booking-card" style="max-width: 500px; margin: 50px auto;">
+                <h2>Member Login</h2>
+                
+                @if (TempData["LoginError"] != null)
+                {
+                    <div class="alert alert-error">
+                        <p>@TempData["LoginError"]</p>
+                    </div>
+                }
+                
+                @if (TempData["LoginSuccess"] != null)
+                {
+                    <div class="alert alert-success">
+                        <p>@TempData["LoginSuccess"]</p>
+                    </div>
+                }
+
+                @using (Html.BeginUmbracoForm("HandleLogin", "MemberAuth", FormMethod.Post))
+                {
+                    <div class="form-group">
+                        <label for="username">Email / Username</label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(returnUrl))
+                    {
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    }
+
+                    <button type="submit" class="btn btn-primary">Login</button>
+                }
+
+                <div style="margin-top: 20px;">
+                    <p><a href="/">Back to Home</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; @DateTime.Now.Year Event Booking System. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

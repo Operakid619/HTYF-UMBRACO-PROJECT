@@ -7,6 +7,8 @@ using Umbraco.Cms.Core.Web;
 using Umbraco.Cms.Infrastructure.Persistence;
 using Umbraco.Cms.Web.Website.Controllers;
 using Umbraco.Cms.Core.Security;
+using Microsoft.AspNetCore.Identity;
+using Umbraco.Cms.Core.Models;
 
 namespace SeniorEventBooking.Controllers;
 
@@ -15,8 +17,9 @@ namespace SeniorEventBooking.Controllers;
 /// </summary>
 public class MemberAuthController : SurfaceController
 {
-    private readonly IMemberSignInManager _memberSignInManager;
+    private readonly IMemberService _memberService;
     private readonly IMemberManager _memberManager;
+    private readonly SignInManager<MemberIdentityUser> _signInManager;
 
     public MemberAuthController(
         IUmbracoContextAccessor umbracoContextAccessor,
@@ -25,12 +28,14 @@ public class MemberAuthController : SurfaceController
         AppCaches appCaches,
         IProfilingLogger profilingLogger,
         IPublishedUrlProvider publishedUrlProvider,
-        IMemberSignInManager memberSignInManager,
-        IMemberManager memberManager)
+        IMemberService memberService,
+        IMemberManager memberManager,
+        SignInManager<MemberIdentityUser> signInManager)
         : base(umbracoContextAccessor, databaseFactory, services, appCaches, profilingLogger, publishedUrlProvider)
     {
-        _memberSignInManager = memberSignInManager;
+        _memberService = memberService;
         _memberManager = memberManager;
+        _signInManager = signInManager;
     }
 
     [HttpGet]
@@ -50,18 +55,23 @@ public class MemberAuthController : SurfaceController
             return RedirectToCurrentUmbracoPage();
         }
 
-        var result = await _memberSignInManager.PasswordSignInAsync(username, password, isPersistent: true, lockoutOnFailure: false);
+        var result = await _memberManager.ValidateCredentialsAsync(username, password);
 
-        if (result.Succeeded)
+        if (result)
         {
-            TempData["LoginSuccess"] = "You have successfully logged in!";
-            
-            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            var member = await _memberManager.FindByNameAsync(username);
+            if (member != null)
             {
-                return Redirect(returnUrl);
+                await _signInManager.SignInAsync(member, isPersistent: true);
+                TempData["LoginSuccess"] = "You have successfully logged in!";
+                
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+                
+                return RedirectToCurrentUmbracoPage();
             }
-            
-            return RedirectToCurrentUmbracoPage();
         }
 
         TempData["LoginError"] = "Invalid username or password.";
@@ -71,7 +81,7 @@ public class MemberAuthController : SurfaceController
     [HttpPost]
     public async Task<IActionResult> Logout()
     {
-        await _memberSignInManager.SignOutAsync();
+        await _signInManager.SignOutAsync();
         TempData["LogoutSuccess"] = "You have been logged out.";
         return RedirectToCurrentUmbracoPage();
     }

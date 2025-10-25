@@ -40,7 +40,7 @@ public class BookingController : SurfaceController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [IgnoreAntiforgeryToken]
     public async Task<IActionResult> SubmitBooking(BookingFormViewModel model)
     {
         // Trace entry to diagnose 400s and confirm routing hits this action

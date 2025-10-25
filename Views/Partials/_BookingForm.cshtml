@@ -21,7 +21,7 @@
 
     @using (Html.BeginUmbracoForm("SubmitBooking", "Booking", FormMethod.Post, new { @class = "booking-form" }))
     {
-        @Html.AntiForgeryToken()
+        
         @Html.HiddenFor(m => m.EventKey)
 
         <div class="form-group">

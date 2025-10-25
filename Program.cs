@@ -39,6 +39,19 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<EventBookingDbContext>();
+        // Ensure EF creates the schema for EventBookingDbContext if missing (dev safety)
+        try
+        {
+            var created = await db.Database.EnsureCreatedAsync();
+            if (created)
+            {
+                app.Logger.LogInformation("EF EnsureCreated created EventBookings schema.");
+            }
+        }
+        catch (Exception ensureEx)
+        {
+            app.Logger.LogWarning(ensureEx, "EF EnsureCreated failed (continuing to raw SQL guard).");
+        }
         var sql = @"
 IF OBJECT_ID(N'[dbo].[EventBookings]', N'U') IS NULL
 BEGIN

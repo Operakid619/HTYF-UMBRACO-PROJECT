@@ -10,7 +10,7 @@
       "weight": 10,
       "view": "/App_Plugins/EventBookings/bookings.html",
       "show": [
-        "content/*"
+        "content/Event"
       ]
     }
   ]

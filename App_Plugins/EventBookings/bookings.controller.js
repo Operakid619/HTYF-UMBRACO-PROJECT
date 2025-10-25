@@ -7,8 +7,16 @@
     $scope.nodeName = "";
     $scope.bookings = [];
     $scope.error = null;
+    $scope.needsSave = false;
 
     function load() {
+      // If creating a new node (no id or id == -1), don't call the API yet
+      if (!$routeParams.id || $routeParams.id === -1 || $routeParams.id === "-1") {
+        $scope.loading = false;
+        $scope.needsSave = true;
+        return;
+      }
+
       // Load current node info to get the GUID key and verify doc type
       contentResource.getById($routeParams.id)
         .then(function (content) {

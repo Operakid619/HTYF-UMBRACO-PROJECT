@@ -21,6 +21,11 @@
                 </button>
             </div>
 
+            <!-- New/Unsaved node state -->
+            <div ng-if="!loading && needsSave" class="alert alert-info">
+                <p><strong>Save this node</strong> to enable the Bookings view. Once saved, reopen this tab to load bookings.</p>
+            </div>
+
             <!-- Event with bookings -->
             <div ng-if="!loading && isEvent && !error && bookings.length > 0">
                 <div style="margin-bottom: 15px;">
@@ -71,8 +76,8 @@
                 </table>
             </div>
 
-            <!-- Event with no bookings -->
-            <div ng-if="!loading && isEvent && !error && bookings.length === 0" 
+          <!-- Event with no bookings -->
+          <div ng-if="!loading && isEvent && !error && !needsSave && bookings.length === 0" 
                  style="text-align: center; padding: 40px; color: #999;">
                 <div style="font-size: 48px; margin-bottom: 15px;">
                     <i class="icon-calendar"></i>

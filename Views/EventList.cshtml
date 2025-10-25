@@ -1,0 +1,115 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@using Umbraco.Extensions;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+	Layout = null;
+	var events = Model.Children?.Where(x => x.IsVisible())?.ToList() ?? new List<Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent>();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>@Model.Name - Events</title>
+	<link rel="stylesheet" href="/css/site.css">
+	<style>
+		.events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+		.event-card { border: 1px solid #eee; border-radius: 8px; padding: 16px; background: #fff; transition: box-shadow .2s ease; }
+		.event-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+		.event-card h3 { margin: 0 0 8px; font-size: 1.1rem; }
+		.event-meta { display: flex; flex-wrap: wrap; gap: 10px; color: #555; font-size: .95rem; margin-bottom: 10px; }
+		.event-actions { display: flex; justify-content: space-between; align-items: center; }
+		.badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: .75rem; }
+		.badge-success { background: #e8f7ee; color: #137333; }
+		.badge-warning { background: #fff4e5; color: #8a5700; }
+		.badge-danger { background: #fde8e8; color: #9b1c1c; }
+		.badge-secondary { background: #eef2f7; color: #384151; }
+		.btn-primary { display: inline-block; padding: 8px 12px; background: #2563eb; color: #fff; border-radius: 6px; text-decoration: none; }
+		.btn-primary[aria-disabled="true"] { background: #9ca3af; pointer-events: none; }
+		.page-header { display:flex; align-items:center; justify-content:space-between; margin: 20px 0; }
+		.page-header h1 { margin: 0; }
+		.empty { text-align:center; color:#666; padding: 40px 0; }
+	</style>
+	</head>
+<body>
+	<header class="site-header">
+		<div class="container">
+			<nav class="main-nav">
+				<a href="/" class="back-link">Home</a>
+				<ul class="nav-menu">
+					<li><a href="/umbraco" class="btn-secondary">Back Office</a></li>
+				</ul>
+			</nav>
+		</div>
+	</header>
+
+	<main class="main-content">
+		<div class="container">
+			<div class="page-header">
+				<h1>@Model.Name</h1>
+				<span>@events.Count item@(events.Count == 1 ? "" : "s")</span>
+			</div>
+
+			@if (!events.Any())
+			{
+				<div class="empty">
+					<p>No events are published yet. Create some Event items under this page in the Umbraco back office.</p>
+				</div>
+			}
+			else
+			{
+				<div class="events-grid">
+					@foreach (var ev in events)
+					{
+						var date = ev.Value<DateTime?>("eventDateTime") ?? DateTime.MinValue;
+						var capacity = ev.Value<int?>("capacity") ?? 0;
+						var location = ev.Value<string>("location");
+						var isPast = date != DateTime.MinValue && date < DateTime.Now;
+						var isSoldOut = capacity <= 0 && !isPast;
+
+						<article class="event-card">
+							<h3><a href="@ev.Url()">@ev.Name</a></h3>
+							<div class="event-meta">
+								<span>@(date == DateTime.MinValue ? "Date TBA" : date.ToString("ddd, MMM d, yyyy h:mm tt"))</span>
+								@if (!string.IsNullOrWhiteSpace(location))
+								{
+									<span>• @location</span>
+								}
+								<span>• @capacity spot@(capacity == 1 ? "" : "s") left</span>
+							</div>
+							<div class="event-actions">
+								@if (isPast)
+								{
+									<span class="badge badge-secondary">Past Event</span>
+									<a href="@ev.Url()" class="btn-primary">View</a>
+								}
+								else if (isSoldOut)
+								{
+									<span class="badge badge-danger">Sold Out</span>
+									<a href="@ev.Url()" class="btn-primary" aria-disabled="true">Full</a>
+								}
+								else if (capacity <= 10)
+								{
+									<span class="badge badge-warning">Only @capacity left</span>
+									<a href="@ev.Url()" class="btn-primary">View & Book</a>
+								}
+								else
+								{
+									<span class="badge badge-success">Available</span>
+									<a href="@ev.Url()" class="btn-primary">View & Book</a>
+								}
+							</div>
+						</article>
+					}
+				</div>
+			}
+		</div>
+	</main>
+
+	<footer class="site-footer">
+		<div class="container">
+			<p>&copy; @DateTime.Now.Year @Model.Root()?.Name. All rights reserved.</p>
+		</div>
+	</footer>
+</body>
+</html>

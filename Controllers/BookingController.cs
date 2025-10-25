@@ -40,7 +40,7 @@ public class BookingController : SurfaceController
     }
 
     [HttpPost]
-    [IgnoreAntiforgeryToken] // Explicitly bypass antiforgery to rule out 400 due to token issues
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitBooking(BookingFormViewModel model)
     {
         // Trace entry to diagnose 400s and confirm routing hits this action

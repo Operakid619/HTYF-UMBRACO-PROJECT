@@ -1,0 +1,88 @@
+<div ng-controller="eventBookingsController">
+    <umb-box>
+        <umb-box-header title="Event Bookings"></umb-box-header>
+        <umb-box-content>
+            <!-- Loading state -->
+            <div ng-if="loading" style="text-align: center; padding: 40px;">
+                <umb-load-indicator></umb-load-indicator>
+                <p>Loading bookings...</p>
+            </div>
+
+            <!-- Not an Event type -->
+            <div ng-if="!loading && !isEvent" class="alert alert-warning">
+                <p><strong>Note:</strong> Bookings are only available for Event content types.</p>
+            </div>
+
+            <!-- Error state -->
+            <div ng-if="!loading && error" class="alert alert-error">
+                <p><strong>Error:</strong> {{error}}</p>
+                <button type="button" class="btn btn-default" ng-click="refresh()">
+                    <i class="icon-refresh"></i> Retry
+                </button>
+            </div>
+
+            <!-- Event with bookings -->
+            <div ng-if="!loading && isEvent && !error && bookings.length > 0">
+                <div style="margin-bottom: 15px;">
+                    <h4>{{nodeName}}</h4>
+                    <p><strong>Total Bookings:</strong> {{bookings.length}}</p>
+                    <button type="button" class="btn btn-default btn-sm" ng-click="refresh()">
+                        <i class="icon-refresh"></i> Refresh
+                    </button>
+                </div>
+
+                <table class="table table-striped" style="width: 100%; margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 25%;">Booker Name</th>
+                            <th style="width: 30%;">Email</th>
+                            <th style="width: 20%;">Booked On</th>
+                            <th style="width: 10%;">CRM Status</th>
+                            <th style="width: 10%;">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="booking in bookings | orderBy:'-createdDate'">
+                            <td>{{booking.id}}</td>
+                            <td><strong>{{booking.bookerName}}</strong></td>
+                            <td>
+                                <a href="mailto:{{booking.bookerEmail}}">{{booking.bookerEmail}}</a>
+                            </td>
+                            <td>
+                                {{booking.createdDate | date:'short'}}
+                            </td>
+                            <td>
+                                <span ng-if="booking.apiSuccess" class="label label-success">
+                                    <i class="icon-check"></i> Synced
+                                </span>
+                                <span ng-if="!booking.apiSuccess" class="label label-warning">
+                                    <i class="icon-alert"></i> Failed
+                                </span>
+                            </td>
+                            <td>
+                                <span ng-if="booking.note" style="font-style: italic; color: #666;">
+                                    {{booking.note | limitTo:30}}{{booking.note.length > 30 ? '...' : ''}}
+                                </span>
+                                <span ng-if="!booking.note" style="color: #ccc;">—</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Event with no bookings -->
+            <div ng-if="!loading && isEvent && !error && bookings.length === 0" 
+                 style="text-align: center; padding: 40px; color: #999;">
+                <div style="font-size: 48px; margin-bottom: 15px;">
+                    <i class="icon-calendar"></i>
+                </div>
+                <h4>No Bookings Yet</h4>
+                <p>This event has not received any bookings.</p>
+                <button type="button" class="btn btn-default" ng-click="refresh()">
+                    <i class="icon-refresh"></i> Refresh
+                </button>
+            </div>
+        </umb-box-content>
+    </umb-box>
+</div>

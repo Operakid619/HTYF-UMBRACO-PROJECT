@@ -1,0 +1,17 @@
+{
+  "javascript": [
+    "/App_Plugins/EventBookings/bookings.controller.js"
+  ],
+  "contentApps": [
+    {
+      "alias": "eventBookings",
+      "name": "Bookings",
+      "icon": "icon-calendar",
+      "weight": 10,
+      "view": "/App_Plugins/EventBookings/bookings.html",
+      "show": [
+        "content/*"
+      ]
+    }
+  ]
+}

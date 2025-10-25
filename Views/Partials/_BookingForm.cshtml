@@ -1,0 +1,72 @@
+@model SeniorEventBooking.Models.BookingFormViewModel
+@{
+    var validationErrors = ViewData.ModelState.Where(x => x.Value?.Errors.Count > 0).ToList();
+}
+
+<div class="booking-form-wrapper">
+    @if (validationErrors.Any())
+    {
+        <div class="alert alert-error">
+            <ul class="error-list">
+                @foreach (var error in validationErrors)
+                {
+                    foreach (var errorMessage in error.Value!.Errors)
+                    {
+                        <li>@errorMessage.ErrorMessage</li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+
+    @using (Html.BeginUmbracoForm("SubmitBooking", "Booking", FormMethod.Post, new { @class = "booking-form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.EventKey)
+
+        <div class="form-group">
+            <label asp-for="Name" class="form-label">
+                @Html.DisplayNameFor(m => m.Name)
+                <span class="required">*</span>
+            </label>
+            @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Enter your full name", required = "required" })
+            @Html.ValidationMessageFor(m => m.Name, "", new { @class = "field-validation-error" })
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email" class="form-label">
+                @Html.DisplayNameFor(m => m.Email)
+                <span class="required">*</span>
+            </label>
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "your.email@example.com", required = "required" })
+            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "field-validation-error" })
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Note" class="form-label">
+                @Html.DisplayNameFor(m => m.Note)
+            </label>
+            @Html.TextAreaFor(m => m.Note, new { @class = "form-control", rows = "4", placeholder = "Any special requirements or questions? (Optional)" })
+            @Html.ValidationMessageFor(m => m.Note, "", new { @class = "field-validation-error" })
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Confirm Booking
+            </button>
+        </div>
+
+        <p class="form-note">
+            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Your booking will be confirmed immediately, and we'll sync your details with our member system.
+        </p>
+    }
+</div>

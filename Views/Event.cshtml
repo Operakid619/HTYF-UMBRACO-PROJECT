@@ -1,6 +1,184 @@
 ﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@using SeniorEventBooking.Models;
 @inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContentModels.Event>
 @using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
 @{
-	Layout = null;
+    Layout = null;
+    var eventDate = Model.EventDateTime;
+    var isPastEvent = eventDate < DateTime.Now;
+    var isSoldOut = Model.Capacity <= 0;
+    var showBookingSuccess = TempData["BookingSuccess"] != null;
+    var showBookingError = TempData["BookingError"] != null;
+    var isLoggedIn = User?.Identity?.IsAuthenticated ?? false;
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@Model.Name - Event Details</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="main-nav">
+                <a href="@Model.Parent?.Url()" class="back-link">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back to Events
+                </a>
+                <ul class="nav-menu">
+                    @if (isLoggedIn)
+                    {
+                        <li><span class="user-greeting">Welcome, @User?.Identity?.Name</span></li>
+                        <li><a href="/umbraco/surface/members/logout" class="btn-secondary">Logout</a></li>
+                    }
+                    else
+                    {
+                        <li><a href="/umbraco/surface/members/login" class="btn-secondary">Member Login</a></li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            @if (showBookingSuccess)
+            {
+                <div class="alert alert-success">
+                    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <p>@TempData["BookingSuccess"]</p>
+                </div>
+            }
+
+            @if (showBookingError)
+            {
+                <div class="alert alert-error">
+                    <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    <p>@TempData["BookingError"]</p>
+                </div>
+            }
+
+            <article class="event-detail">
+                <div class="event-detail-header">
+                    <div class="event-date-large">
+                        <span class="month">@eventDate.ToString("MMMM")</span>
+                        <span class="day">@eventDate.ToString("dd")</span>
+                        <span class="year">@eventDate.ToString("yyyy")</span>
+                    </div>
+                    <div class="event-header-content">
+                        <h1 class="event-title">@Model.Name</h1>
+                        <div class="event-meta-large">
+                            <div class="meta-item">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>@eventDate.ToString("dddd, h:mm tt")</span>
+                            </div>
+                            <div class="meta-item">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <span>@Model.Location</span>
+                            </div>
+                            <div class="meta-item">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <span><strong>@Model.Capacity</strong> spots available</span>
+                            </div>
+                        </div>
+
+                        @if (isPastEvent)
+                        {
+                            <span class="badge badge-secondary">Past Event</span>
+                        }
+                        else if (isSoldOut)
+                        {
+                            <span class="badge badge-danger">Sold Out</span>
+                        }
+                        else if (Model.Capacity <= 10)
+                        {
+                            <span class="badge badge-warning">Only @Model.Capacity spots left!</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-success">Available</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="event-detail-body">
+                    <section class="event-description">
+                        <h2>About This Event</h2>
+                        @if (!string.IsNullOrWhiteSpace(Model.Summary?.ToString()))
+                        {
+                            <div class="rich-text">
+                                @Html.Raw(Model.Summary)
+                            </div>
+                        }
+                        else
+                        {
+                            <p>Join us for this exciting event!</p>
+                        }
+                    </section>
+
+                    @if (!isPastEvent && !isSoldOut)
+                    {
+                        <section class="booking-section">
+                            <div class="booking-card">
+                                <h2>Book Your Spot</h2>
+                                @if (isLoggedIn)
+                                {
+                                    @await Html.PartialAsync("~/Views/Partials/_BookingForm.cshtml", new BookingFormViewModel { EventKey = Model.Key })
+                                }
+                                else
+                                {
+                                    <div class="login-prompt">
+                                        <svg class="icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                        <h3>Member-Only Booking</h3>
+                                        <p>You must be logged in as a member to book this event.</p>
+                                        <div class="button-group">
+                                            <a href="/umbraco/surface/members/login?returnUrl=@Url.Encode(Context.Request.Path)" class="btn btn-primary">
+                                                Login to Book
+                                            </a>
+                                            <a href="/umbraco/surface/members/register" class="btn btn-secondary">
+                                                Register as Member
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+                </div>
+            </article>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; @DateTime.Now.Year @Model.Root()?.Name. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

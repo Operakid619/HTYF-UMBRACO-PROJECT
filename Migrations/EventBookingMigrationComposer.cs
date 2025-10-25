@@ -41,7 +41,8 @@ public class RunEventBookingMigration : INotificationHandler<UmbracoApplicationS
     {
         var migrationPlan = new MigrationPlan("EventBooking");
         migrationPlan.From(string.Empty)
-            .To<CreateEventBookingsTable>("event-booking-db");
+            .To<CreateEventBookingsTable>("event-booking-db")
+            .To<CreateEventBookingsTableV2>("event-booking-db-v2");
 
         var upgrader = new Upgrader(migrationPlan);
         upgrader.Execute(_migrationPlanExecutor, _scopeProvider, _keyValueService);

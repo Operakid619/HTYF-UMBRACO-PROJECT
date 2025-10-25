@@ -48,8 +48,40 @@ public class MemberbaseService : IMemberbaseService
             var jsonContent = JsonSerializer.Serialize(contactData);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            // Send POST request to create contact
-            var response = await _httpClient.PostAsync("/api/contacts", content);
+            // Determine endpoint(s) to try based on BaseUrl. Some envs expose /api/contacts, others just /contacts.
+            var endpointsToTry = new List<string>();
+            // Prefer /api/contacts unless BaseUrl already includes '/api'
+            if (_baseUrl.TrimEnd('/').EndsWith("/api", StringComparison.OrdinalIgnoreCase) ||
+                _baseUrl.Contains("/api/", StringComparison.OrdinalIgnoreCase))
+            {
+                endpointsToTry.Add("/contacts");
+            }
+            else
+            {
+                endpointsToTry.Add("/api/contacts");
+                endpointsToTry.Add("/contacts"); // fallback
+            }
+
+            HttpResponseMessage? response = null;
+            string? triedUrls = null;
+            foreach (var ep in endpointsToTry)
+            {
+                var full = new Uri(_httpClient.BaseAddress!, ep);
+                triedUrls = string.IsNullOrEmpty(triedUrls) ? full.ToString() : $"{triedUrls}, {full}";
+                _logger.LogInformation("Calling Memberbase endpoint: {Url}", full);
+                response = await _httpClient.PostAsync(ep, content);
+                if (response.StatusCode != System.Net.HttpStatusCode.NotFound)
+                {
+                    break; // only fall back on 404; other codes should be handled below
+                }
+                _logger.LogWarning("Memberbase endpoint returned 404 NotFound: {Url}. Will try next fallback if available.", full);
+            }
+
+            if (response == null)
+            {
+                _logger.LogError("Memberbase API did not return a response. Endpoints tried: {Urls}", triedUrls ?? "(none)");
+                return (false, null, "No response from Memberbase API");
+            }
 
             if (response.IsSuccessStatusCode)
             {
@@ -73,8 +105,9 @@ public class MemberbaseService : IMemberbaseService
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Memberbase API returned error: {StatusCode} - {Error}", 
-                    response.StatusCode, errorContent);
+                var targetUrl = response.RequestMessage?.RequestUri?.ToString() ?? triedUrls ?? "(unknown)";
+                _logger.LogError("Memberbase API returned error: {StatusCode} - {Error}. URL tried: {Url}", 
+                    response.StatusCode, errorContent, targetUrl);
                 
                 return (false, null, $"API Error: {response.StatusCode}");
             }

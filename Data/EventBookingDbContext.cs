@@ -30,8 +30,8 @@ public class EventBookingDbContext : DbContext
             entity.Property(e => e.BookerName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.BookerEmail).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Note).HasMaxLength(1000);
-            entity.Property(e => e.ApiContactId).HasMaxLength(100);
-            entity.Property(e => e.ApiResponse).HasMaxLength(500);
+            entity.Property(e => e.ApiContactId).HasMaxLength(200);
+            // ApiResponse left without max length to map to NVARCHAR(MAX)
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
         });
     }

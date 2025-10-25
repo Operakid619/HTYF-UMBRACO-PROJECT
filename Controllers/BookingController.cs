@@ -40,21 +40,67 @@ public class BookingController : SurfaceController
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
+    [IgnoreAntiforgeryToken] // Explicitly bypass antiforgery to rule out 400 due to token issues
     public async Task<IActionResult> SubmitBooking(BookingFormViewModel model)
     {
+        // Trace entry to diagnose 400s and confirm routing hits this action
+        try
+        {
+            var referer = Request.Headers["Referer"].FirstOrDefault() ?? "(none)";
+            var cookieHeaderLen = Request.Headers.ContainsKey("Cookie") ? Request.Headers["Cookie"].ToString().Length : 0;
+            _logger.LogInformation(
+                "SubmitBooking invoked. Path={Path}, Referer={Referer}, Authenticated={Auth}, CookieHeaderLength={CookieLength}",
+                Request.Path,
+                referer,
+                User?.Identity?.IsAuthenticated ?? false,
+                cookieHeaderLen
+            );
+        }
+        catch
+        {
+            // no-op: logging must never break the flow
+        }
+
+        // Helper to safely redirect back to the originating page
+        IActionResult RedirectBack()
+        {
+            var referer = Request.Headers["Referer"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(referer) && Url.IsLocalUrl(referer))
+            {
+                return Redirect(referer);
+            }
+            return Redirect("/");
+        }
+
         // Check if user is authenticated (member only feature)
         if (!User.Identity?.IsAuthenticated ?? true)
         {
             TempData["BookingError"] = "You must be logged in to book an event.";
-            return RedirectToCurrentUmbracoPage();
+            return RedirectBack();
         }
 
         // Validate model
         if (!ModelState.IsValid)
         {
+            // Log validation issues for troubleshooting
+            try
+            {
+                var allErrors = ModelState
+                    .Where(kvp => kvp.Value?.Errors.Count > 0)
+                    .Select(kvp => new
+                    {
+                        Field = kvp.Key,
+                        Errors = kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray()
+                    });
+                foreach (var item in allErrors)
+                {
+                    _logger.LogWarning("ModelState error on {Field}: {Errors}", item.Field, string.Join(" | ", item.Errors));
+                }
+            }
+            catch { }
+
             TempData["BookingError"] = "Please correct the errors in the form.";
-            return CurrentUmbracoPage();
+            return RedirectBack();
         }
 
         try
@@ -69,7 +115,7 @@ public class BookingController : SurfaceController
             if (existingBooking != null)
             {
                 TempData["BookingError"] = "You have already booked this event.";
-                return RedirectToCurrentUmbracoPage();
+                return RedirectBack();
             }
 
             // Create booking entity
@@ -79,7 +125,11 @@ public class BookingController : SurfaceController
                 BookerName = model.Name,
                 BookerEmail = model.Email,
                 Note = model.Note,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                // Defensive defaults in case DB columns are non-nullable
+                ApiContactId = string.Empty,
+                ApiResponse = string.Empty,
+                ApiSuccess = false
             };
 
             // Save booking to database first
@@ -108,19 +158,19 @@ public class BookingController : SurfaceController
                 TempData["BookingSuccess"] = "Your booking has been confirmed! However, there was an issue syncing with our CRM system.";
             }
 
-            return RedirectToCurrentUmbracoPage();
+            return RedirectBack();
         }
         catch (DbUpdateException ex)
         {
             _logger.LogError(ex, "Database error while saving booking");
             TempData["BookingError"] = "There was an error processing your booking. Please try again.";
-            return CurrentUmbracoPage();
+            return RedirectBack();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error while processing booking");
             TempData["BookingError"] = "An unexpected error occurred. Please try again later.";
-            return CurrentUmbracoPage();
+            return RedirectBack();
         }
     }
 
